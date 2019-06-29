@@ -26,8 +26,8 @@ template<>
 inline std::string ChatTranslator::NativeOperations::MemoryUtils::Read(HANDLE targetProcess, void *position)
 {
 	auto string = std::string();
-	size_t bufferSize = 64;
-	auto buffer = std::make_unique<uint8_t[]>(64);
+	size_t bufferSize = 256;
+	auto buffer = std::make_unique<uint8_t[]>(bufferSize);
 	auto currentPosition = reinterpret_cast<uint8_t *>(position);
 	size_t readSize;
 
@@ -50,7 +50,7 @@ inline std::string ChatTranslator::NativeOperations::MemoryUtils::Read(HANDLE ta
 			}
 			else
 			{
-				currentPosition += readSize;
+				currentPosition += stringEndIndex;
 			}
 		}
 		else

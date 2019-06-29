@@ -16,7 +16,7 @@ namespace ChatTranslator::NativeOperations
 		{
 		}
 		UniqueHandle(const UniqueHandle &other) = delete;
-		UniqueHandle(UniqueHandle &&other) : handle(other.handle), closer(move(other.closer))
+		UniqueHandle(UniqueHandle &&other) noexcept : handle(other.handle), closer(move(other.closer))
 		{
 			other.handle = INVALID_HANDLE_VALUE;
 			other.closer = nullptr;
@@ -41,7 +41,7 @@ namespace ChatTranslator::NativeOperations
 		}
 
 		UniqueHandle &operator=(const UniqueHandle &other) = delete;
-		UniqueHandle &operator=(UniqueHandle &&other)
+		UniqueHandle &operator=(UniqueHandle &&other) noexcept
 		{
 			handle = other.handle;
 			closer = move(other.closer);

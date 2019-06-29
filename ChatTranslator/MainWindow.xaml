@@ -27,6 +27,7 @@
         <Label Content="Macro name" HorizontalAlignment="Right" Margin="0,88,10,0" VerticalAlignment="Top" Width="247"/>
         <TextBox x:Name="macroNameTextBox" HorizontalAlignment="Right" Height="23" Margin="0,119,10,0" TextWrapping="Wrap" Text="MacroName" VerticalAlignment="Top" Width="247"/>
         <Button x:Name="setMacroButton" Content="Set" HorizontalAlignment="Right" Margin="0,206,10,0" VerticalAlignment="Top" Width="75" Click="SetMacroButton_Click"/>
+        <Button x:Name="detachButton" Content="Detach" Margin="547,63,170,0" VerticalAlignment="Top" Click="DetachButton_Click"/>
 
     </Grid>
 </Window>

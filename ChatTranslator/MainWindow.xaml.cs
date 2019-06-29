@@ -15,7 +15,7 @@ namespace ChatTranslator
         private bool macroShortcutEditing = false;
         private ITranslator translatorJ2K;
         private ITranslator translatorK2J;
-        private FFXIVConnector connector;
+        private FFXIVConnector connector = null;
 
         public MainWindow()
         {
@@ -116,7 +116,7 @@ namespace ChatTranslator
                     Process selectedProcess = processes[processList.SelectedIndex];
 
                     AppendChatLog(string.Format("Connecting to process {0}...", selectedProcess.Id));
-                    connector = await FFXIVConnector.CreateConnector(selectedProcess);
+                    connector = await FFXIVConnector.CreateConnector(selectedProcess, AppendChatLog);
                     AppendChatLog("Conntected.");
 
                     SetWindowState(MainWindowState.MacroNotSelected);
@@ -135,14 +135,17 @@ namespace ChatTranslator
                 case MainWindowState.ProcessDisconnected:
                     sendButton.IsEnabled = false;
                     setMacroButton.IsEnabled = false;
+                    detachButton.IsEnabled = false;
                     break;
                 case MainWindowState.MacroNotSelected:
                     sendButton.IsEnabled = false;
                     setMacroButton.IsEnabled = true;
+                    detachButton.IsEnabled = true;
                     break;
                 case MainWindowState.AllAvailable:
                     sendButton.IsEnabled = true;
                     setMacroButton.IsEnabled = true;
+                    detachButton.IsEnabled = true;
                     break;
                 default:
                     throw new ArgumentException("Invalid state : " + state);
@@ -164,15 +167,41 @@ namespace ChatTranslator
             }
         }
 
-        private void AppendChatLog(string log)
+        public void AppendChatLog(string log)
         {
-            var now = DateTime.Now;
-            int newItemIndex = chatListView.Items.Add(string.Format("[{0}:{1}] {2}", now.Hour, now.Minute, log));
-
-            if (newItemIndex >= 0)
+            if (Dispatcher.CheckAccess())
             {
-                chatListView.ScrollIntoView(chatListView.Items[newItemIndex]);
+                var now = DateTime.Now;
+                int newItemIndex = chatListView.Items.Add(string.Format("[{0}:{1}] {2}", now.Hour, now.Minute, log));
+
+                if (newItemIndex >= 0)
+                {
+                    chatListView.ScrollIntoView(chatListView.Items[newItemIndex]);
+                }
+
+                try
+                {
+                    Clipboard.SetDataObject(log);
+                }
+                catch (Exception e)
+                {
+                    chatListView.Items.Add(string.Format("[{0}:{1}] {2}", now.Hour, now.Minute, e.ToString()));
+                }
             }
+            else
+            {
+                Dispatcher.InvokeAsync(() => AppendChatLog(log));
+            }
+        }
+
+        private void DetachButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (connector != null)
+            {
+                connector.Dispose();
+                connector = null;
+            }
+            SetWindowState(MainWindowState.ProcessDisconnected);
         }
     }
 }

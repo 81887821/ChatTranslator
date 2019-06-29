@@ -66,6 +66,15 @@
     <ClInclude Include="targetver.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="BreakPointManager.h">
+      <Filter>헤더 파일\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="CaseInsensitiveWCharTraits.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ModuleUtils.h">
+      <Filter>헤더 파일\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -84,6 +93,12 @@
       <Filter>소스 파일\Utils</Filter>
     </ClCompile>
     <ClCompile Include="ProcessHelper.cpp">
+      <Filter>소스 파일\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ModuleUtils.cpp">
+      <Filter>소스 파일\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="BreakPointManager.cpp">
       <Filter>소스 파일\Utils</Filter>
     </ClCompile>
   </ItemGroup>

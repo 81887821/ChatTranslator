@@ -170,6 +170,72 @@ namespace ChatTranslator
             }
         }
 
+        public static void StartReading(Process ffxivProcess)
+        {
+            DllErrorCode errorCode = StartReading(ffxivProcess.Handle);
+
+            switch (errorCode)
+            {
+                case DllErrorCode.Success:
+                    return;
+                case DllErrorCode.InternalError:
+                    throw new DllInnerException("StartReading failed with unknown reason.");
+                default:
+                    throw new DllInnerException("StartReading returned unexpected error code : " + errorCode);
+            }
+        }
+
+        public static void StopReading(Process ffxivProcess)
+        {
+            DllErrorCode errorCode = StopReading(ffxivProcess.Handle);
+
+            switch (errorCode)
+            {
+                case DllErrorCode.Success:
+                    return;
+                case DllErrorCode.InternalError:
+                    throw new DllInnerException("StopReading failed with unknown reason.");
+                default:
+                    throw new DllInnerException("StopReading returned unexpected error code : " + errorCode);
+            }
+        }
+
+        public static unsafe string WaitAndReadScenarioString(Process ffxivProcess)
+        {
+            int bufferSize = 1024;
+            byte[] buffer = new byte[bufferSize];
+            IntPtr processHandle = ffxivProcess.Handle;
+
+            while (true)
+            {
+                fixed (byte* bufferPointer = buffer)
+                {
+                    DllErrorCode errorCode = WaitAndReadScenarioString(processHandle, bufferPointer, bufferSize, out int stringLength);
+
+                    switch (errorCode)
+                    {
+                        case DllErrorCode.Success:
+                            return Encoding.UTF8.GetString(bufferPointer, stringLength);
+                        case DllErrorCode.InsufficientBufferSize:
+                            if (bufferSize > stringLength)
+                            {
+                                throw new DllInnerException(string.Format("InsufficientBufferSize returned though bufferSize({0}) is lager than macroNameLength({1}).", bufferSize, stringLength));
+                            }
+                            else
+                            {
+                                bufferSize = stringLength;
+                                buffer = new byte[bufferSize];
+                                continue;
+                            }
+                        case DllErrorCode.InternalError:
+                            throw new DllInnerException("WaitAndReadScenarioString failed with unknown reason.");
+                        default:
+                            throw new DllInnerException("WaitAndReadScenarioString returned unexpected error code : " + errorCode);
+                    }
+                }
+            }
+        }
+
         [DllImport(DLL_NAME)]
         private static extern DllErrorCode SearchMacroLocation(IntPtr ffxivProcessHandle, out IntPtr macroPosition);
         [DllImport(DLL_NAME)]
@@ -182,5 +248,11 @@ namespace ChatTranslator
         private static extern DllErrorCode GetFFXIVWindowHandle(IntPtr ffxivProcessHandle, out IntPtr windowHandle);
         [DllImport(DLL_NAME)]
         private static extern DllErrorCode SendKeyEvent(IntPtr windowHandle, int virtualKeyCode, bool keyDownEvent);
+        [DllImport(DLL_NAME)]
+        private static extern DllErrorCode StartReading(IntPtr ffxivProcessHandle);
+        [DllImport(DLL_NAME)]
+        private static extern DllErrorCode StopReading(IntPtr ffxivProcessHandle);
+        [DllImport(DLL_NAME)]
+        private static unsafe extern DllErrorCode WaitAndReadScenarioString(IntPtr ffxivProcessHandle, void* buffer, int bufferCapacity, out int stringLength);
     }
 }

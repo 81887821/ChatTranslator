@@ -14,4 +14,7 @@ extern "C"
 	DLL_EXPORT DllErrorCode WriteMacro(HANDLE ffxivProcessHandle, void *macroPosition, int32_t macroNumber, int32_t macroLine, const void *content, int32_t contentSize);
 	DLL_EXPORT DllErrorCode GetFFXIVWindowHandle(HANDLE ffxivProcessHandle, HWND *windowHandle);
 	DLL_EXPORT DllErrorCode SendKeyEvent(HWND windowHandle, int32_t virtualKeyCode, bool keyDownEvent);
+	DLL_EXPORT DllErrorCode StartReading(HANDLE ffxivProcessHandle);
+	DLL_EXPORT DllErrorCode StopReading(HANDLE ffxivProcessHandle);
+	DLL_EXPORT DllErrorCode WaitAndReadScenarioString(HANDLE ffxivProcessHandle, void* buffer, int32_t bufferCapacity, int32_t *stringLength);
 }

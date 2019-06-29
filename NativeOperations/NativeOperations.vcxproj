@@ -151,12 +151,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BreakPointManager.h" />
+    <ClInclude Include="CaseInsensitiveWCharTraits.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="DllErrorCode.h" />
     <ClInclude Include="DllException.h" />
     <ClInclude Include="Macro.h" />
     <ClInclude Include="MemoryUtilsDeclaration.h" />
     <ClInclude Include="MemoryUtils.h" />
+    <ClInclude Include="ModuleUtils.h" />
     <ClInclude Include="NativeOperations.h" />
     <ClInclude Include="ProcessHelper.h" />
     <ClInclude Include="stdafx.h" />
@@ -165,9 +168,11 @@
     <ClInclude Include="WindowsError.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BreakPointManager.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Macro.cpp" />
     <ClCompile Include="MemoryUtils.cpp" />
+    <ClCompile Include="ModuleUtils.cpp" />
     <ClCompile Include="NativeOperations.cpp" />
     <ClCompile Include="ProcessHelper.cpp" />
     <ClCompile Include="stdafx.cpp">

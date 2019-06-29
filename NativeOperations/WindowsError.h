@@ -11,29 +11,37 @@ namespace ChatTranslator::NativeOperations
 	public:
 		const DWORD errorCode;
 
-		explicit WindowsError(DWORD errorCode) : errorCode(errorCode)
+		explicit inline WindowsError(DWORD errorCode, const string &errorMessage = string()) : errorCode(errorCode)
 		{
-			FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPSTR>(&messageBuffer), 0, nullptr);
+			LPSTR messageBuffer = nullptr;
+
+			if (!errorMessage.empty())
+			{
+				message = errorMessage;
+				message.append(": ");
+			}
+
+			if (FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPSTR>(&messageBuffer), 0, nullptr))
+			{
+				message.append(messageBuffer);
+				LocalFree(messageBuffer);
+			}
+			else
+			{
+				message.append("Failed to get error message.");
+			}
 		}
 
 		~WindowsError()
 		{
-			LocalFree(messageBuffer);
 		}
 
 		const char *what() const noexcept override
 		{
-			if (messageBuffer)
-			{
-				return messageBuffer;
-			}
-			else
-			{
-				return "Failed to get error message.";
-			}
+			return message.c_str();
 		}
 
 	protected:
-		LPSTR messageBuffer = nullptr;
+		string message;
 	};
 }

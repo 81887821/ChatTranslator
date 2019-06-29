@@ -7,6 +7,9 @@
 #include "MemoryUtils.h"
 #include "Constants.h"
 #include "Macro.h"
+#include "BreakPointManager.h"
+#include <fstream>
+#include <iostream>
 using namespace std;
 using namespace ChatTranslator::NativeOperations;
 
@@ -160,6 +163,63 @@ DLL_EXPORT DllErrorCode SendKeyEvent(HWND windowHandle, int32_t virtualKeyCode, 
 		return DllErrorCode::Success;
 	}
 	else
+	{
+		return DllErrorCode::InternalError;
+	}
+}
+
+DLL_EXPORT DllErrorCode StartReading(HANDLE ffxivProcessHandle)
+{
+	try
+	{
+		BreakPointManager::EnableDebugging(ffxivProcessHandle);
+		return DllErrorCode::Success;
+	}
+	catch (exception&)
+	{
+		return DllErrorCode::InternalError;
+	}
+}
+
+DLL_EXPORT DllErrorCode StopReading(HANDLE ffxivProcessHandle)
+{
+	try
+	{
+		BreakPointManager::DisableDebugging(ffxivProcessHandle);
+		return DllErrorCode::Success;
+	}
+	catch (exception&)
+	{
+		return DllErrorCode::InternalError;
+	}
+}
+
+DLL_EXPORT DllErrorCode WaitAndReadScenarioString(HANDLE ffxivProcessHandle, void* buffer, int32_t bufferCapacity, int32_t* stringLength)
+{
+	try
+	{
+		string string = BreakPointManager::WaitAndReadString(ffxivProcessHandle);
+
+		if (string.size() <= numeric_limits<int32_t>::max())
+		{
+			*stringLength = static_cast<int32_t>(string.length());
+
+			if (static_cast<size_t>(bufferCapacity) >= string.length())
+			{
+				memcpy(buffer, string.data(), string.size());
+				return DllErrorCode::Success;
+			}
+			else
+			{
+				return DllErrorCode::InsufficientBufferSize;
+			}
+		}
+		else
+		{
+			return DllErrorCode::InternalError;
+		}
+	}
+	catch (exception&)
 	{
 		return DllErrorCode::InternalError;
 	}

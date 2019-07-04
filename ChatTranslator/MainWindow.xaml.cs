@@ -2,6 +2,7 @@
 using ChatTranslator.Translator;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -16,6 +17,7 @@ namespace ChatTranslator
         private ITranslator translatorJ2K;
         private ITranslator translatorK2J;
         private FFXIVConnector connector = null;
+        private ClipboardManager clipboardManager;
 
         public MainWindow()
         {
@@ -28,6 +30,7 @@ namespace ChatTranslator
 
             translatorJ2K = new DummyTranslator();
             translatorK2J = new DummyTranslator();
+            clipboardManager = new ClipboardManager(Dispatcher);
 
             UpdateProcessList();
         }
@@ -46,7 +49,7 @@ namespace ChatTranslator
             }
             catch (Exception exception)
             {
-                AppendChatLog("Send message failed : " + exception.Message);
+                await AppendChatLog("Send message failed : " + exception.Message);
             }
         }
 
@@ -115,15 +118,15 @@ namespace ChatTranslator
                 {
                     Process selectedProcess = processes[processList.SelectedIndex];
 
-                    AppendChatLog(string.Format("Connecting to process {0}...", selectedProcess.Id));
+                    await AppendChatLog(string.Format("Connecting to process {0}...", selectedProcess.Id));
                     connector = await FFXIVConnector.CreateConnector(selectedProcess, AppendChatLog);
-                    AppendChatLog("Conntected.");
+                    await AppendChatLog("Conntected.");
 
                     SetWindowState(MainWindowState.MacroNotSelected);
                 }
                 catch (Exception exception)
                 {
-                    AppendChatLog("Process connection failed: " + exception.Message);
+                    await AppendChatLog("Process connection failed: " + exception.Message);
                 }
             }
         }
@@ -159,15 +162,15 @@ namespace ChatTranslator
                 int macroNumber = await connector.SetMacroToUse(macroNameTextBox.Text);
                 connector.SetMacroKey(macroKey);
                 SetWindowState(MainWindowState.AllAvailable);
-                AppendChatLog(string.Format("Selected macro #{0}.", macroNumber));
+                await AppendChatLog(string.Format("Selected macro #{0}.", macroNumber));
             }
             catch (Exception exception)
             {
-                AppendChatLog("Macro selection failed : " + exception.Message);
+                await AppendChatLog("Macro selection failed : " + exception.Message);
             }
         }
 
-        public void AppendChatLog(string log)
+        public async Task AppendChatLog(string log)
         {
             if (Dispatcher.CheckAccess())
             {
@@ -179,18 +182,11 @@ namespace ChatTranslator
                     chatListView.ScrollIntoView(chatListView.Items[newItemIndex]);
                 }
 
-                try
-                {
-                    Clipboard.SetDataObject(log);
-                }
-                catch (Exception e)
-                {
-                    chatListView.Items.Add(string.Format("[{0}:{1}] {2}", now.Hour, now.Minute, e.ToString()));
-                }
+                clipboardManager.WriteToClipboard(log);
             }
             else
             {
-                Dispatcher.InvokeAsync(() => AppendChatLog(log));
+                await Dispatcher.InvokeAsync(() => AppendChatLog(log));
             }
         }
 

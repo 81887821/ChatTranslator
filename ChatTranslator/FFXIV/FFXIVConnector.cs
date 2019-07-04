@@ -9,7 +9,7 @@ namespace ChatTranslator.FFXIV
 {
     public class FFXIVConnector : IDisposable
     {
-        public delegate void ScenarioStringReceiveHandler(string scenarioString);
+        public delegate Task ScenarioStringReceiveHandler(string scenarioString);
 
         protected Process ffxivProcess;
         protected IntPtr macroPosition;

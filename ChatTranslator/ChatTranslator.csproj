@@ -99,6 +99,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ClipboardManager.cs" />
     <Compile Include="Exceptions\InsufficientMacroLineCapacityException.cs" />
     <Compile Include="Exceptions\InvalidMacroLineException.cs" />
     <Compile Include="Exceptions\InvalidMacroNumberException.cs" />

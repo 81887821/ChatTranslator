@@ -9,6 +9,11 @@ namespace ChatTranslator
 {
     internal class ClipboardManager
     {
+        private static readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromMilliseconds(100);
+        private static readonly TimeSpan INTERVAL_VERY_SHORT = TimeSpan.FromMilliseconds(250);
+        private static readonly TimeSpan INTERVAL_SHORT = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan INTERVAL_NORMAL = TimeSpan.FromMilliseconds(2000);
+
         private readonly Queue<string> clipboardWriteQueue;
         private TimeSpan currentWriteInterval;
 
@@ -56,11 +61,12 @@ namespace ChatTranslator
                         continue;
                     }
 
-                    await WaitForNextWrite(lastWrittenTime, numberOfRemainStrings);
+                    await WaitForNextWrite(lastWrittenTime, lastWrittenString.Length);
+                    SetNextWriteInterval(numberOfRemainStrings);
 
                     try
                     {
-                        Clipboard.SetDataObject(currentString);
+                        Clipboard.SetDataObject(numberOfRemainStrings + currentString);
                     }
                     catch (Exception)
                     {
@@ -78,17 +84,35 @@ namespace ChatTranslator
             }
         }
 
-        internal async Task WaitForNextWrite(DateTime lastWrittenTime, int numberOfRemainStrings)
+        internal async Task WaitForNextWrite(DateTime lastWrittenTime, int lastWrittenStringLength)
         {
-            await SleepUntil(lastWrittenTime + currentWriteInterval);
+            TimeSpan intervalByLength = TimeSpan.FromMilliseconds(150.0 + lastWrittenStringLength * 100);
+            TimeSpan interval = Min(currentWriteInterval, intervalByLength);
+            await SleepUntil(lastWrittenTime + interval);
+        }
 
-            if (numberOfRemainStrings >= 10)
+        private static TimeSpan Min(TimeSpan left, TimeSpan right)
+        {
+            return left > right ? right : left;
+        }
+
+        internal void SetNextWriteInterval(int numberOfRemainStrings)
+        {
+            if (numberOfRemainStrings >= 20)
             {
-                currentWriteInterval = TimeSpan.FromMilliseconds(0.5);
+                currentWriteInterval = INTERVAL_MINIMUM;
+            }
+            else if (numberOfRemainStrings >= 10)
+            {
+                currentWriteInterval = Min(currentWriteInterval, INTERVAL_VERY_SHORT);
+            }
+            else if (numberOfRemainStrings >= 5)
+            {
+                currentWriteInterval = Min(currentWriteInterval, INTERVAL_SHORT);
             }
             else if (numberOfRemainStrings <= 0)
             {
-                currentWriteInterval = TimeSpan.FromSeconds(2);
+                currentWriteInterval = INTERVAL_NORMAL;
             }
         }
 

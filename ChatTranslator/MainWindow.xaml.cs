@@ -18,6 +18,7 @@ namespace ChatTranslator
         private ITranslator translatorK2J;
         private FFXIVConnector connector = null;
         private ClipboardManager clipboardManager;
+        private string lastChatLog = string.Empty;
 
         public MainWindow()
         {
@@ -174,15 +175,19 @@ namespace ChatTranslator
         {
             if (Dispatcher.CheckAccess())
             {
-                var now = DateTime.Now;
-                int newItemIndex = chatListView.Items.Add(string.Format("[{0}:{1}] {2}", now.Hour, now.Minute, log));
-
-                if (newItemIndex >= 0)
+                if (lastChatLog != log)
                 {
-                    chatListView.ScrollIntoView(chatListView.Items[newItemIndex]);
-                }
+                    var now = DateTime.Now;
+                    int newItemIndex = chatListView.Items.Add(string.Format("[{0}:{1}] {2}", now.Hour, now.Minute, log));
 
-                clipboardManager.WriteToClipboard(log);
+                    if (newItemIndex >= 0)
+                    {
+                        chatListView.ScrollIntoView(chatListView.Items[newItemIndex]);
+                    }
+
+                    clipboardManager.WriteToClipboard(log);
+                    lastChatLog = log;
+                }
             }
             else
             {

@@ -108,6 +108,7 @@
     <Compile Include="Exceptions\DllInnerException.cs" />
     <Compile Include="Exceptions\WindowNotFoundException.cs" />
     <Compile Include="FFXIV\Exceptions\MacroNotFoundException.cs" />
+    <Compile Include="FFXIV\Exceptions\ProcessExitedException.cs" />
     <Compile Include="FFXIV\FFXIVConnector.cs" />
     <Compile Include="NativeOperations.cs" />
     <Compile Include="Translator\DummyTranslator.cs" />

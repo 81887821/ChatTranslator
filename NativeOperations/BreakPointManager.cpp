@@ -1,3 +1,4 @@
+#include <vector>
 #include "stdafx.h"
 #include "BreakPointManager.h"
 #include "ModuleUtils.h"
@@ -17,7 +18,7 @@ const size_t ChatTranslator::NativeOperations::BreakPointManager::VOICE_TARGET_I
 void* ChatTranslator::NativeOperations::BreakPointManager::voiceTargetInstructionAddress = nullptr;
 char* ChatTranslator::NativeOperations::BreakPointManager::voiceTargetStringAddress = nullptr;
 
-vector<DWORD> ChatTranslator::NativeOperations::BreakPointManager::threadsInDebug = vector<DWORD>();
+set<DWORD> ChatTranslator::NativeOperations::BreakPointManager::threadsInDebug = set<DWORD>();
 
 void ChatTranslator::NativeOperations::BreakPointManager::EnableDebugging(HANDLE ffxivProcessHandle)
 {
@@ -47,6 +48,7 @@ void ChatTranslator::NativeOperations::BreakPointManager::EnableDebugging(HANDLE
 void ChatTranslator::NativeOperations::BreakPointManager::DisableDebugging(HANDLE ffxivProcessHandle)
 {
 	DWORD ffxivProcessId = GetProcessId(ffxivProcessHandle);
+	auto aliveThreads = vector<UniqueHandle>();
 
 	for (DWORD threadId : threadsInDebug)
 	{
@@ -74,10 +76,22 @@ void ChatTranslator::NativeOperations::BreakPointManager::DisableDebugging(HANDL
 			{
 				throw WindowsError(GetLastError(), "SetThreadContext failed");
 			}
-			if (ResumeThread(threadHandle) == static_cast<DWORD>(-1))
-			{
-				throw WindowsError(GetLastError(), "ResumeThread failed");
-			}
+
+			aliveThreads.emplace_back(move(threadHandle));
+		}
+	}
+
+	DEBUG_EVENT debugEvent;
+	while (WaitForDebugEvent(&debugEvent, 0))
+	{
+		ContinueDebugEvent(debugEvent.dwProcessId, debugEvent.dwThreadId, DBG_CONTINUE);
+	}
+
+	for (UniqueHandle& threadHandle : aliveThreads)
+	{
+		if (ResumeThread(threadHandle) == static_cast<DWORD>(-1))
+		{
+			throw WindowsError(GetLastError(), "ResumeThread failed");
 		}
 	}
 
@@ -105,7 +119,10 @@ string ChatTranslator::NativeOperations::BreakPointManager::WaitAndReadString(HA
 			throw WindowsError(GetLastError(), "WaitForDebugEventEx failed");
 		}
 
-		if (debugEvent.dwDebugEventCode == CREATE_THREAD_DEBUG_EVENT || debugEvent.dwDebugEventCode == CREATE_PROCESS_DEBUG_EVENT)
+		switch (debugEvent.dwDebugEventCode)
+		{
+		case CREATE_THREAD_DEBUG_EVENT:
+		case CREATE_PROCESS_DEBUG_EVENT:
 		{
 			HANDLE hThread = debugEvent.dwDebugEventCode == CREATE_THREAD_DEBUG_EVENT ? debugEvent.u.CreateThread.hThread : debugEvent.u.CreateProcessInfo.hThread;
 
@@ -128,14 +145,16 @@ string ChatTranslator::NativeOperations::BreakPointManager::WaitAndReadString(HA
 				throw WindowsError(GetLastError(), "SetThreadContext failed");
 			}
 
-			threadsInDebug.emplace_back(GetThreadId(hThread));
+			threadsInDebug.emplace(debugEvent.dwThreadId);
 
 			if (debugEvent.dwDebugEventCode == CREATE_PROCESS_DEBUG_EVENT)
 			{
 				CloseHandle(debugEvent.u.CreateProcessInfo.hFile);
 			}
+
+			break;
 		}
-		else if (debugEvent.dwDebugEventCode == EXCEPTION_DEBUG_EVENT)
+		case EXCEPTION_DEBUG_EVENT:
 		{
 			UniqueHandle threadHandle = OpenThread(THREAD_ALL_ACCESS, false, debugEvent.dwThreadId);
 
@@ -180,10 +199,24 @@ string ChatTranslator::NativeOperations::BreakPointManager::WaitAndReadString(HA
 			{
 				throw WindowsError(GetLastError(), "SetThreadContext failed");
 			}
+
+			break;
 		}
-		else if (debugEvent.dwDebugEventCode == LOAD_DLL_DEBUG_EVENT)
-		{
+		case LOAD_DLL_DEBUG_EVENT:
 			CloseHandle(debugEvent.u.LoadDll.hFile);
+			break;
+		case EXIT_THREAD_DEBUG_EVENT:
+			threadsInDebug.erase(debugEvent.dwThreadId);
+			break;
+		case EXIT_PROCESS_DEBUG_EVENT:
+			threadsInDebug.clear();
+			if (!ContinueDebugEvent(debugEvent.dwProcessId, debugEvent.dwThreadId, DBG_CONTINUE))
+			{
+				throw WindowsError(GetLastError(), "ContinueDebugEvent failed");
+			}
+			throw ProcessExitedException();
+		default:
+			break;
 		}
 
 		if (!ContinueDebugEvent(debugEvent.dwProcessId, debugEvent.dwThreadId, DBG_CONTINUE))

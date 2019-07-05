@@ -14,5 +14,6 @@ namespace ChatTranslator::NativeOperations
 		InvalidMacroLine = -6,
 		InsufficientMacroLineCapacity = -7,
 		NoWindowFound = -8,
+		ProcessExited = -9,
 	};
 }

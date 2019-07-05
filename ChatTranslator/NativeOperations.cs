@@ -1,4 +1,5 @@
 ﻿using ChatTranslator.Exceptions;
+using ChatTranslator.FFXIV.Exceptions;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -22,6 +23,7 @@ namespace ChatTranslator
             InvalidMacroLine = -6,
             InsufficientMacroLineCapacity = -7,
             NoWindowFound = -8,
+            ProcessExited = -9,
         }
 
         public static IntPtr SearchMacroLocation(Process ffxivProcess)
@@ -229,6 +231,8 @@ namespace ChatTranslator
                             }
                         case DllErrorCode.InternalError:
                             throw new DllInnerException("WaitAndReadScenarioString failed with unknown reason.");
+                        case DllErrorCode.ProcessExited:
+                            throw new ProcessExitedException();
                         default:
                             throw new DllInnerException("WaitAndReadScenarioString returned unexpected error code : " + errorCode);
                     }

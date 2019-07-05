@@ -219,6 +219,10 @@ DLL_EXPORT DllErrorCode WaitAndReadScenarioString(HANDLE ffxivProcessHandle, voi
 			return DllErrorCode::InternalError;
 		}
 	}
+	catch (ProcessExitedException&)
+	{
+		return DllErrorCode::ProcessExited;
+	}
 	catch (exception&)
 	{
 		return DllErrorCode::InternalError;

@@ -60,6 +60,10 @@ namespace ChatTranslator.FFXIV
                     scenarioHandler(scenarioString);
                 }
             }
+            catch (ProcessExitedException)
+            {
+                debuggerSet = false;
+            }
             catch (Exception)
             {
             }
@@ -147,6 +151,7 @@ namespace ChatTranslator.FFXIV
                 }
 
                 disposedValue = true;
+                scenarioReadThread.Join();
             }
         }
 

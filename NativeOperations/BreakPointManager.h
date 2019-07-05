@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
 #include <tuple>
-#include <vector>
+#include <set>
+#include "DllException.h"
 
 namespace ChatTranslator::NativeOperations
 {
@@ -26,6 +27,10 @@ namespace ChatTranslator::NativeOperations
 		static void* voiceTargetInstructionAddress;
 		static char* voiceTargetStringAddress;
 
-		static vector<DWORD> threadsInDebug;
+		static set<DWORD> threadsInDebug;
+	};
+
+	class ProcessExitedException : public DllException
+	{
 	};
 }

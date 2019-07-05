@@ -66,7 +66,7 @@ namespace ChatTranslator
 
                     try
                     {
-                        Clipboard.SetDataObject(numberOfRemainStrings + currentString);
+                        Clipboard.SetDataObject(currentString);
                     }
                     catch (Exception)
                     {

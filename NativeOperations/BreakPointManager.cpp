@@ -8,11 +8,6 @@
 using namespace std;
 
 const wstring ChatTranslator::NativeOperations::BreakPointManager::MODULE_NAME = L"ffxiv_dx11.exe";
-const size_t ChatTranslator::NativeOperations::BreakPointManager::TARGET_OFFSET = 0x8401E3;
-const size_t ChatTranslator::NativeOperations::BreakPointManager::TARGET_INSTRUCTION_SIZE = 4;
-void* ChatTranslator::NativeOperations::BreakPointManager::targetInstructionAddress = nullptr;
-char* ChatTranslator::NativeOperations::BreakPointManager::targetStringAddress = nullptr;
-
 const size_t ChatTranslator::NativeOperations::BreakPointManager::VOICE_TARGET_OFFSET = 0xDEF3B6;
 const size_t ChatTranslator::NativeOperations::BreakPointManager::VOICE_TARGET_INSTRUCTION_SIZE = 5;
 void* ChatTranslator::NativeOperations::BreakPointManager::voiceTargetInstructionAddress = nullptr;
@@ -31,7 +26,6 @@ void ChatTranslator::NativeOperations::BreakPointManager::EnableDebugging(HANDLE
 		throw WindowsError(GetLastError(), "GetModuleInformation failed");
 	}
 
-	targetInstructionAddress = reinterpret_cast<uint8_t*>(moduleInformation.lpBaseOfDll) + TARGET_OFFSET;
 	voiceTargetInstructionAddress = reinterpret_cast<uint8_t*>(moduleInformation.lpBaseOfDll) + VOICE_TARGET_OFFSET;
 
 	if (!DebugActiveProcess(ffxivProcessId))
@@ -134,11 +128,9 @@ string ChatTranslator::NativeOperations::BreakPointManager::WaitAndReadString(HA
 				throw WindowsError(GetLastError(), "GetThreadContext failed");
 			}
 
-			context.Dr0 = reinterpret_cast<DWORD64>(targetInstructionAddress);
-			context.Dr1 = reinterpret_cast<DWORD64>(targetInstructionAddress) + TARGET_INSTRUCTION_SIZE;
 			context.Dr2 = reinterpret_cast<DWORD64>(voiceTargetInstructionAddress);
 			context.Dr3 = reinterpret_cast<DWORD64>(voiceTargetInstructionAddress) + VOICE_TARGET_INSTRUCTION_SIZE;
-			context.Dr7 = 1 | (1 << 2) | (1 << 4) | (1 << 6);
+			context.Dr7 = (1 << 4) | (1 << 6);
 
 			if (!SetThreadContext(hThread, &context))
 			{
@@ -173,16 +165,7 @@ string ChatTranslator::NativeOperations::BreakPointManager::WaitAndReadString(HA
 
 			if (debugEvent.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_SINGLE_STEP || debugEvent.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_BREAKPOINT)
 			{
-				if (debugEvent.u.Exception.ExceptionRecord.ExceptionAddress == targetInstructionAddress)
-				{
-					char** pointerToString = reinterpret_cast<char**>(context.R9);
-					targetStringAddress = MemoryUtils::Read<char*>(ffxivProcessHandle, pointerToString);
-				}
-				else if (debugEvent.u.Exception.ExceptionRecord.ExceptionAddress == reinterpret_cast<uint8_t*>(targetInstructionAddress) + TARGET_INSTRUCTION_SIZE)
-				{
-					result = MemoryUtils::Read<string>(ffxivProcessHandle, targetStringAddress);
-				}
-				else if (debugEvent.u.Exception.ExceptionRecord.ExceptionAddress == voiceTargetInstructionAddress)
+				if (debugEvent.u.Exception.ExceptionRecord.ExceptionAddress == voiceTargetInstructionAddress)
 				{
 					char** pointerToString = reinterpret_cast<char**>(context.Rcx);
 					voiceTargetStringAddress = MemoryUtils::Read<char*>(ffxivProcessHandle, pointerToString);

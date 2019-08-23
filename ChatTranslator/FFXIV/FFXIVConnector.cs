@@ -41,7 +41,6 @@ namespace ChatTranslator.FFXIV
 
         protected void Initialize()
         {
-            SearchMemoryPositions();
             ffxivWindowHandle = NativeOperations.GetFFXIVWindowHandle(ffxivProcess);
             scenarioReadThread = new Thread(ScenarioReaderMain);
             scenarioReadThread.Start();
@@ -80,11 +79,6 @@ namespace ChatTranslator.FFXIV
                 NativeOperations.StopReading(ffxivProcess);
                 debuggerSet = false;
             }
-        }
-
-        protected void SearchMemoryPositions()
-        {
-            macroPosition = NativeOperations.SearchMacroLocation(ffxivProcess);
         }
 
         public async Task<int> SetMacroToUse(string macroName)

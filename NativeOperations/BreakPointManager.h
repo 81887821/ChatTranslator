@@ -18,9 +18,7 @@ namespace ChatTranslator::NativeOperations
 	protected:
 		static const wstring MODULE_NAME;
 		static const size_t VOICE_TARGET_OFFSET;
-		static const size_t VOICE_TARGET_INSTRUCTION_SIZE;
 		static void* voiceTargetInstructionAddress;
-		static char* voiceTargetStringAddress;
 
 		static set<DWORD> threadsInDebug;
 	};

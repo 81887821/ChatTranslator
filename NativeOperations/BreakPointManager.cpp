@@ -9,9 +9,7 @@ using namespace std;
 
 const wstring ChatTranslator::NativeOperations::BreakPointManager::MODULE_NAME = L"ffxiv_dx11.exe";
 const size_t ChatTranslator::NativeOperations::BreakPointManager::VOICE_TARGET_OFFSET = 0xE770B6;
-const size_t ChatTranslator::NativeOperations::BreakPointManager::VOICE_TARGET_INSTRUCTION_SIZE = 5;
 void* ChatTranslator::NativeOperations::BreakPointManager::voiceTargetInstructionAddress = nullptr;
-char* ChatTranslator::NativeOperations::BreakPointManager::voiceTargetStringAddress = nullptr;
 
 set<DWORD> ChatTranslator::NativeOperations::BreakPointManager::threadsInDebug = set<DWORD>();
 
@@ -129,8 +127,7 @@ string ChatTranslator::NativeOperations::BreakPointManager::WaitAndReadString(HA
 			}
 
 			context.Dr2 = reinterpret_cast<DWORD64>(voiceTargetInstructionAddress);
-			context.Dr3 = reinterpret_cast<DWORD64>(voiceTargetInstructionAddress) + VOICE_TARGET_INSTRUCTION_SIZE;
-			context.Dr7 = (1 << 4) | (1 << 6);
+			context.Dr7 = (1 << 4);
 
 			if (!SetThreadContext(hThread, &context))
 			{
@@ -167,12 +164,8 @@ string ChatTranslator::NativeOperations::BreakPointManager::WaitAndReadString(HA
 			{
 				if (debugEvent.u.Exception.ExceptionRecord.ExceptionAddress == voiceTargetInstructionAddress)
 				{
-					char** pointerToString = reinterpret_cast<char**>(context.Rcx);
-					voiceTargetStringAddress = MemoryUtils::Read<char*>(ffxivProcessHandle, pointerToString);
-				}
-				else if (debugEvent.u.Exception.ExceptionRecord.ExceptionAddress == reinterpret_cast<uint8_t*>(voiceTargetInstructionAddress) + VOICE_TARGET_INSTRUCTION_SIZE)
-				{
-					result = MemoryUtils::Read<string>(ffxivProcessHandle, voiceTargetStringAddress);
+					char* stringAddress = reinterpret_cast<char*>(context.Rdx);
+					result = MemoryUtils::Read<string>(ffxivProcessHandle, stringAddress);
 				}
 			}
 

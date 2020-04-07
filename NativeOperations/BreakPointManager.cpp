@@ -8,7 +8,7 @@
 using namespace std;
 
 const wstring ChatTranslator::NativeOperations::BreakPointManager::MODULE_NAME = L"ffxiv_dx11.exe";
-const size_t ChatTranslator::NativeOperations::BreakPointManager::VOICE_TARGET_OFFSET = 0xEA4EF6;
+const size_t ChatTranslator::NativeOperations::BreakPointManager::VOICE_TARGET_OFFSET = 0xEA5396;
 void* ChatTranslator::NativeOperations::BreakPointManager::voiceTargetInstructionAddress = nullptr;
 
 set<DWORD> ChatTranslator::NativeOperations::BreakPointManager::threadsInDebug = set<DWORD>();
